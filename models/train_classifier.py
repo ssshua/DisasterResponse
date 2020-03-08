@@ -1,6 +1,7 @@
 import sys
 import pickle
 import pandas as pd
+import re
 from sqlalchemy import create_engine
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
@@ -13,11 +14,10 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.metrics import classification_report
 
-import datetime
 
 def load_data(database_filepath):
     """
-    数据导入
+    从SQLLite导入数据
     返回:X, y, category_names
     """
     engine = create_engine('sqlite:///{}'.format(database_filepath))
@@ -29,6 +29,13 @@ def load_data(database_filepath):
     return X, Y, Y.columns
     
 def tokenize(text):
+    """
+    分词，删除停顿词，文本处理
+    """
+    
+    #删除标点符号
+    text = re.sub(r"[^a-zA-Z0-9]", " ", text)
+    
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
     
@@ -66,7 +73,7 @@ def build_model():
         }
     
     #设置网格搜索
-    cv = GridSearchCV(pipeline, parameters, cv = 3, n_jobs = -1)
+    cv = GridSearchCV(pipeline, parameters, cv = 2, n_jobs = -1)
     
     return cv
 
@@ -124,3 +131,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
