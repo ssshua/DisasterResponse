@@ -3,6 +3,9 @@ import pickle
 import pandas as pd
 import re
 from sqlalchemy import create_engine
+import nltk
+nltk.download(['punkt', 'wordnet', 'stopwords'])
+
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
