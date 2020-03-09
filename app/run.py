@@ -1,9 +1,13 @@
 import json
+import re
 import plotly
 import pandas as pd
 
+import nltk
+nltk.download('stopwords')
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
 
 from flask import Flask
 from flask import render_template, request, jsonify
@@ -15,22 +19,37 @@ from sqlalchemy import create_engine
 app = Flask(__name__)
 
 def tokenize(text):
+    """
+    分词，删除停顿词，文本处理
+    """
+    
+    #删除标点符号
+    text = re.sub(r"[^a-zA-Z0-9]", " ", text)
+    
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
-
+    
+    #导入英文停顿词库
+    stopword = stopwords.words('english')
+      
     clean_tokens = []
     for tok in tokens:
+        #词形还原
         clean_tok = lemmatizer.lemmatize(tok).lower().strip()
-        clean_tokens.append(clean_tok)
-
+        #去除停顿词
+        if tok in stopword:
+            pass
+        else:
+            clean_tokens.append(clean_tok)
+    
     return clean_tokens
 
 # load data
-engine = create_engine('sqlite:///../data/YourDatabaseName.db')
-df = pd.read_sql_table('YourTableName', engine)
+engine = create_engine('sqlite:///../data/DisasterResponse.db')
+df = pd.read_sql_table('Messages', engine)
 
 # load model
-model = joblib.load("../models/your_model_name.pkl")
+model = joblib.load("../models/classifier.pkl")
 
 
 # index webpage displays cool visuals and receives user input text for model
@@ -43,8 +62,25 @@ def index():
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
     
-    # create visuals
-    # TODO: Below is an example - modify to create your own visuals
+    #新增图1：统计分类个数
+    df_category = df.drop(['id','message','original','genre'], axis=1)
+    category_count = df_category.sum().sort_values(ascending = False)
+    category_count = category_count[0:10]
+    category_name = list(category_count.index)
+
+    #新增图2：词频前十
+    words_list=[]  
+    #文本处理
+    for text in df['message'].values:
+        words = tokenize(text)
+        words_list.extend(words)
+        
+    df_word = pd.DataFrame(words_list, columns=['word'])
+    #取词频前十
+    word_count = df_word['word'].value_counts()[0:10]
+    word_index = list(word_count.index) 
+    
+    
     graphs = [
         {
             'data': [
@@ -61,6 +97,36 @@ def index():
                 },
                 'xaxis': {
                     'title': "Genre"
+                }
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=category_name,
+                    y=category_count
+                )
+            ],
+
+            'layout': {
+                'title': 'Top 10 Message Categories',
+                'yaxis': {
+                    'title': "Sum"
+                }
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=word_index,
+                    y=word_count
+                )
+            ],
+
+            'layout': {
+                'title': 'Top 10 Word',
+                'yaxis': {
+                    'title': "Count"
                 }
             }
         }
