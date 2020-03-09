@@ -21,7 +21,10 @@ from sklearn.metrics import classification_report
 def load_data(database_filepath):
     """
     从SQLLite导入数据
-    返回:X, y, category_names
+    Args:
+        database_filepath：路径
+    Returns:
+        X, y, category_names
     """
     engine = create_engine('sqlite:///{}'.format(database_filepath))
     df = pd.read_sql_table('Messages', engine)
@@ -34,6 +37,7 @@ def load_data(database_filepath):
 def tokenize(text):
     """
     分词，删除停顿词，文本处理
+    Returns：clean_tokens
     """
     
     #删除标点符号
@@ -61,7 +65,7 @@ def tokenize(text):
 def build_model():
     """
     构建模型的管道函数
-    返回模型
+    Returns： model
     """
     pipeline = Pipeline([
             ('vect', CountVectorizer(tokenizer=tokenize)),
@@ -83,11 +87,14 @@ def build_model():
 
 def evaluate_model(model, X_test, Y_test, category_names):
     """
-    输出模型评价
-    Model:构建的模型
-    X_test:测试集
-    Y_test:测试集分类
-    category_names
+    print输出模型评价
+    Args:
+        Model：构建的模型
+        X_test：测试集
+        Y_test：测试集分类
+        category_names
+    Returns:
+        None
     """
     
     y_pred = model.predict(X_test)
@@ -98,6 +105,9 @@ def evaluate_model(model, X_test, Y_test, category_names):
 def save_model(model, model_filepath):
     """
     模型保存为pickle
+    Args:
+        model：训练后模型
+        model_filepath：模型保存路径
     """
     pkl = open(model_filepath, 'wb')
     pickle.dump(model, pkl)
