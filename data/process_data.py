@@ -5,8 +5,12 @@ from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
     """
-    导入message、categories文件
-    返回合并数据集
+    数据集读取并处理
+    Args:
+        messages_filepath：messages文件路径
+        categories_filepath：categories文件路径
+    Returns:
+        合并后的数据集df
     """
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath) 
@@ -17,7 +21,9 @@ def load_data(messages_filepath, categories_filepath):
 
 def clean_data(df):
     """
-    数据集清洗并返回
+    df数据读取并清洗
+    Returns:
+        清洗后的数据集df
     """
     categories = df['categories'].str.split(';', expand = True)
     
@@ -47,7 +53,7 @@ def clean_data(df):
     
 def save_data(df, database_filename):
     """
-    保存清洗后的数据
+    读取清洗后的数据集df并保存至Sqllite
     """
     engine = create_engine('sqlite:///{}'.format(database_filename))
     df.to_sql('Messages', engine, index=False, if_exists='replace')
